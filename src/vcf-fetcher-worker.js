@@ -1,15 +1,14 @@
 import { text } from 'd3-request';
-import { bisector, range } from 'd3-array';
+import { bisector } from 'd3-array';
 import { tsvParseRows } from 'd3-dsv';
-import { scaleLinear, scaleBand, scaleLog } from 'd3-scale';
+import { scaleLinear, scaleLog } from 'd3-scale';
 import { expose, Transfer } from 'threads/worker';
 import { TabixIndexedFile } from '@gmod/tabix';
 import VCF from '@gmod/vcf';
 import { RemoteFile } from 'generic-filehandle';
-import { getSubstitutions } from './vcf-utils';
 import LRU from 'lru-cache';
 import slugid from 'slugid';
-import { PILEUP_COLORS, PILEUP_COLOR_IXS } from './vcf-utils';
+import { PILEUP_COLOR_IXS } from './vcf-utils';
 
 function currTime() {
   const d = new Date();

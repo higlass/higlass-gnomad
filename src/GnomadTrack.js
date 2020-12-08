@@ -19,10 +19,6 @@ const createColorTexture = (PIXI, colors) => {
   return [PIXI.Texture.fromBuffer(rgba, colorTexRes, colorTexRes), colorTexRes];
 };
 
-function transformY(p, t) {
-  return p * t.k + t.y;
-}
-
 function invY(p, t) {
   return (p - t.y) / t.k;
 }
