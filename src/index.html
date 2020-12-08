@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="author" content="Peter Kerpedjiev">
+  <meta name="description" content="A plugin track to display labelled points in HiGlass">
+  <meta name="keywords" content="HiGlass, Plugin Tracks">
+
+  <!-- Schema.org markup for Google+ -->
+  <meta itemprop="name" content="HiGlass Labelled Points Track">
+  <meta itemprop="description" content="A plugin track to display labelled points in HiGlass">
+  <meta itemprop="image" content="https://raw.githubusercontent.com/flekschas/higlass-geojson/master/teaser.jpg">
+
+  <!-- Twitter Card data -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@flekschas">
+  <meta name="twitter:title" content="HiGlass Labelled Points Track">
+  <meta name="twitter:description" content="A plugin track to display labelled points in HiGlass">
+  <meta name="twitter:creator" content="@flekschas">
+  <!-- Twitter summary card with large image must be at least 280x150px -->
+  <meta name="twitter:image:src" content="https://raw.githubusercontent.com/flekschas/higlass-geojson/master/teaser.jpg">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="HiGlass Labelled Points Track" />
+  <meta property="og:description" content="A plugin track to display labelled points HiGlass" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://github.com/pkerpedjiev/higlass-labelled-points-track" />
+  <meta property="og:image" content="https://raw.githubusercontent.com/flekschas/higlass-geojson/master/teaser.jpg" />
+
+  <title>HiGlass Gnomad Track</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+  <link rel="stylesheet" href="hglib.css">
+
+  <style type="text/css">
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    #demo {
+      position: absolute;
+      left: 1rem;
+      top: 1rem;
+      bottom: 1rem;
+      right: 1rem;
+    }
+  </style>
+
+<script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+<script crossorigin src="https://unpkg.com/pixi.js-legacy@5/dist/pixi-legacy.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.32.1/react-bootstrap.min.js"></script>
+</head>
+<body>
+  <div id="demo"></div>
+</body>
+<script crossorigin src="https://unpkg.com/higlass-sequence/dist/higlass-sequence.js"></script>
+<script src="hglib.js"></script>
+<script>
+const testViewConfig =
+{
+  "editable": true,
+  "trackSourceServers": [
+    "/api/v1",
+    "http://higlass.io/api/v1"
+  ],
+  "exportViewUrl": "/api/v1/viewconfs",
+  "views": [
+    {
+
+      "initialXDomain": [10026087.639179552,
+        10026405.897125244],
+      //"initialXDomain": [10000000,10000050],
+
+
+
+      "initialYDomain": [
+        180520.26598912096,
+        180863.4346387336
+      ],
+      "tracks": {
+        "top": [
+          {
+            "uid": "AdlJsUYFRzuJRZyYeKDX2A",
+            "type": "chromosome-labels",
+            "width": 811,
+            "height": 30,
+            "server": "//higlass.io/api/v1",
+            "options": {
+              "color": "#808080",
+              "stroke": "#ffffff",
+              "fontSize": 12,
+              "fontIsLeftAligned": false,
+              "showMousePosition": false,
+              "mousePositionColor": "#000000"
+            },
+            "filetype": "chromsizes-tsv",
+            "tilesetUid": "NyITQvZsS_mOFNlz5C2LJg"
+          },
+          {
+            "uid": "fastaex",
+            "data": {
+              "type": "fasta",
+              "faiUrl": "https://aveit.s3.amazonaws.com/higlass/data/sequence/hg38.fa.fai",
+              "fastaUrl": "https://aveit.s3.amazonaws.com/higlass/data/sequence/hg38.fa",
+              "chromSizesUrl": "https://aveit.s3.amazonaws.com/higlass/data/sequence/hg38.mod.chrom.sizes"
+            },
+            "type": "horizontal-sequence",
+            "width": 768,
+            "height": 25,
+            "options": {
+              "name": "hg38",
+              "barBorder": true,
+              "colorScale": [
+                "#08519c",
+                "#6baed6",
+                "#993404",
+                "#fe9929",
+                "#808080",
+                "#DCDCDC"
+              ],
+              "labelColor": "black",
+              "valueScaling": "linear",
+              "labelPosition": "topLeft",
+              "barBorderColor": "white",
+              "backgroundColor": "white",
+              "labelTextOpacity": 0.4,
+              "sortLargestOnTop": true,
+              "trackBorderColor": "white",
+              "trackBorderWidth": 0,
+              "extendedPreloading": false,
+              "colorAggregationMode": "none",
+              "notificationText": "Zoom in to see nucleotides...",
+              "fontSize": 16,
+              "fontFamily": "Arial",
+              "fontColor": "white",
+              "textOption": {
+                "fontSize": "32px",
+                "fontFamily": "Arial",
+                "fill": 16777215,
+                "fontWeight": "bold"
+              }
+            }
+          },
+          {
+            "uid": "emty",
+            "type": "empty",
+            "width": 811,
+            "height": 10,
+            "tilesetUid": "emtyt"
+          },
+          {
+          "type": "gnomad",
+            "options": {},
+            "height": 200,
+            "uid": "FylkvVBTSumoJ959HT4-5B",
+            "data": {
+              "type": "vcf",
+              "vcfUrl": "https://aveit.s3.amazonaws.com/higlass/vcf/chr1_gnomad.test.indexed.vcf.gz",
+              "tbiUrl": "https://aveit.s3.amazonaws.com/higlass/vcf/chr1_gnomad.test.indexed.vcf.gz.tbi",
+              "chromSizesUrl": "https://aveit.s3.amazonaws.com/higlass/data/sequence/hg38.mod.chrom.sizes",
+
+            },
+            "width": 470
+          }
+        ],
+        "left": [],
+        "center": [],
+        "bottom": [],
+        "right": [],
+        "whole": [],
+        "gallery": []
+      },
+      "layout": {
+        "w": 12,
+        "h": 6,
+        "x": 0,
+        "y": 0
+      },
+      "uid": "WdlA7F8aTY2gXQzPGiBlwQ"
+    }
+  ],
+  "zoomLocks": {
+    "locksByViewUid": {},
+    "locksDict": {}
+  },
+  "locationLocks": {
+    "locksByViewUid": {},
+    "locksDict": {}
+  },
+  "valueScaleLocks": {
+    "locksByViewUid": {},
+    "locksDict": {}
+  }
+}
+
+window.hglib.viewer(
+  document.getElementById('demo'),
+  testViewConfig,
+  {
+    bounded: true,
+  },
+);
+</script>
+</html>
