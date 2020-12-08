@@ -36,8 +36,8 @@ Note that `AC` (allele count),`AN` (allele number) and `AF` (allele frequency) i
 
 The live scripts can be found at:
 
-- https://unpkg.com/higlass-pileup/dist/higlass-gnomad.min.js
-- https://unpkg.com/higlass-pileup/dist/0.higlass-gnomad.min.worker.js
+- https://unpkg.com/higlass-gnomad/dist/higlass-gnomad.min.js
+- https://unpkg.com/higlass-gnomad/dist/0.higlass-gnomad.min.worker.js
 
 Note that `higlass-gnomad` currently requires a worker thread. It'll automatically try to retrieve it from the same path as the main script but it needs to be hosted on the same server. The current recommended solution is to pull the already built js files from a release and have your web server serve them from the same path. If you need the worker script to be in a different location than the main script (on the same server), you can use the option `workerScriptLocation` to specify that location.
 
