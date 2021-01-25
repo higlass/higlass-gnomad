@@ -591,7 +591,8 @@ varying vec4 vColor;
           variant.from - variant.chrOffset
         }</td>`;
         alleleCountHtml += `<td>${variant.alleleCount}</td>`;
-        alleleFrequencyHtml += `<td>${variant.alleleFrequency}</td>`;
+        const af = Number.parseFloat(variant.alleleFrequency).toExponential(4);
+        alleleFrequencyHtml += `<td>${af}</td>`;
         alleleNumberHtml += `<td>${variant.alleleNumber}</td>`;
         sourceHtml += `<td>Gnomad</td>`;
         

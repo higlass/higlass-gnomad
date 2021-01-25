@@ -244,6 +244,7 @@ const tile = async (uid, z, x) => {
     // get the bounds of the tile
     let minX = tsInfo.min_pos[0] + x * tileWidth;
     const maxX = tsInfo.min_pos[0] + (x + 1) * tileWidth;
+    
 
     const chromInfo = chromInfos[chromSizesUrl];
 
