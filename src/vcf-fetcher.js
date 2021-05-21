@@ -24,6 +24,7 @@ class VCFDataFetcher {
           dataConfig.vcfUrl,
           dataConfig.tbiUrl,
           dataConfig.chromSizesUrl,
+          dataConfig.maxTileWidth
         )
         .then(() => this.worker);
     });

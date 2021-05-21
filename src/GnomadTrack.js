@@ -1,6 +1,8 @@
 import VCFDataFetcher from './vcf-fetcher';
-import { spawn, Worker } from 'threads';
+import MyWorkerWeb from 'raw-loader!../dist/worker.js';
+import { spawn, BlobWorker } from 'threads';
 import { PILEUP_COLORS } from './vcf-utils';
+import sanitizeHtml from 'sanitize-html';
 
 const createColorTexture = (PIXI, colors) => {
   const colorTexRes = Math.max(2, Math.ceil(Math.sqrt(colors.length)));
@@ -21,27 +23,6 @@ const createColorTexture = (PIXI, colors) => {
 
 function invY(p, t) {
   return (p - t.y) / t.k;
-}
-
-/**
- * Get the location of this script so that we can use it to fetch
- * the worker script.
- *
- * @return {String}         The url of this script
- */
-function getThisScriptLocation() {
-  const scripts = [...document.getElementsByTagName('script')];
-  for (const script of scripts) {
-    const parts = script.src.split('/');
-
-    if (parts.length > 0) {
-      const lastPart = parts[parts.length - 1];
-
-      if (lastPart.indexOf('higlass-gnomad') >= 0) {
-        return parts.slice(0, parts.length - 1).join('/');
-      }
-    }
-  }
 }
 
 const scaleScalableGraphics = (graphics, xScale, drawnAtScale) => {
@@ -141,18 +122,9 @@ const GnomadTrack = (HGC, ...args) => {
 
   class GnomadTrackClass extends HGC.tracks.Tiled1DPixiTrack {
     constructor(context, options) {
-      let baseUrl = `${getThisScriptLocation()}/`;
-      if (options.workerScriptLocation) {
-        baseUrl = options.workerScriptLocation;
-      }
-
-      const worker = spawn(
-        new Worker('./vcf-fetcher-worker.js', {
-          _baseURL: baseUrl,
-        }),
-      );
-
+      const worker = spawn(BlobWorker.fromText(MyWorkerWeb));
       // this is where the threaded tile fetcher is called
+      context.dataConfig['maxTileWidth'] = options.maxTileWidth;
       context.dataFetcher = new VCFDataFetcher(context.dataConfig, worker, HGC);
       super(context, options);
       context.dataFetcher.track = this;
@@ -264,14 +236,6 @@ const GnomadTrack = (HGC, ...args) => {
       return [tileMinX, tileMaxX];
     }
 
-    // colorToArray(color) {
-    //   // const rgb = HGC.libraries.d3Color.rgb(color);
-
-    //   // const array = [rgb.r / 255, rgb.g / 255, rgb.b / 255, rgb.opacity];
-    //   console.log(color)
-    //   return color;
-    // }
-
     setUpShaderAndTextures() {
       const colorDict = PILEUP_COLORS;
 
@@ -280,6 +244,8 @@ const GnomadTrack = (HGC, ...args) => {
           colorDict.VARIANT,
           colorDict.INSERTION,
           colorDict.DELETION,
+          colorDict.INVERSION,
+          colorDict.DUPLICATION
         ] = this.options.colorScale.map((x) => x);
       }
 
@@ -539,6 +505,7 @@ varying vec4 vColor;
     }
 
     getMouseOverHtml(trackX, trackYIn) {
+
       // const trackY = this.valueScaleTransform.invert(track)
       this.mouseOverGraphics.clear();
       // Prevents 'stuck' read outlines when hovering quickly
@@ -561,6 +528,8 @@ varying vec4 vColor;
       let alleleFrequencyHtml = ``;
       let alleleNumberHtml = ``;
       let sourceHtml = ``;
+      let svLength = ``;
+
       const fontStyle = `line-height: 12px;font-family: monospace;font-size:14px;`;
 
       for (const variant of filteredList) {
@@ -585,16 +554,27 @@ varying vec4 vColor;
         let vRef = variant.ref.match(/.{1,15}/g).join('<br>');
         let vAlt = variant.alt.match(/.{1,15}/g).join('<br>');
 
-        variantHtml += `<td style='${fontStyle} padding-right:5px;'><strong>${vRef} &rarr; ${vAlt}</strong></td>`;
+        if(variant.category === "SNV"){
+          variantHtml += `<td style='${fontStyle} padding-right:5px;'><strong>${vRef} &rarr; ${vAlt}</strong></td>`;
+          positionHtml += `<td>${variant.chrName}:${
+            variant.from - variant.chrOffset
+          }</td>`;
+          sourceHtml += `<td>Gnomad</td>`;
+        } 
+        else {
+          variantHtml += `<td>Structural variant</td>`;
+          positionHtml += `<td>${variant.chrName}:${
+            variant.from - variant.chrOffset
+          }-${variant.chrName}:${variant.to - variant.chrOffset}</td>`;
+          sourceHtml += `<td>Gnomad SV</td>`;
+          svLength += `<td>${variant.info['SVLEN']}</td>`
+        }
+
         typeHtml += `<td>${this.capitalizeFirstLetter(variant.type)}</td>`;
-        positionHtml += `<td>${variant.chrName}:${
-          variant.from - variant.chrOffset
-        }</td>`;
         alleleCountHtml += `<td>${variant.alleleCount}</td>`;
         const af = Number.parseFloat(variant.alleleFrequency).toExponential(4);
         alleleFrequencyHtml += `<td>${af}</td>`;
         alleleNumberHtml += `<td>${variant.alleleNumber}</td>`;
-        sourceHtml += `<td>Gnomad</td>`;
         
       }
 
@@ -603,14 +583,20 @@ varying vec4 vColor;
           `<table>` +
           `<tr><td>Variant:</td>${variantHtml}</tr>` +
           `<tr><td>Type:</td>${typeHtml}</tr>` +
-          `<tr><td>Position:</td>${positionHtml}</tr>` +
+          `<tr><td>Position:</td>${positionHtml}</tr>`;
+
+          if(svLength.length > 0){
+            mouseOverHtml += `<tr><td>SV length:</td>${svLength}</tr>`
+          }
+
+          mouseOverHtml +=
           `<tr><td>Allele Count:</td>${alleleCountHtml}</tr>` +
           `<tr><td>Allele Frequency:</td>${alleleFrequencyHtml}</tr>` +
           `<tr><td>Allele Number:</td>${alleleNumberHtml}</tr>` +
           `<tr><td>Source:</td>${sourceHtml}</tr>` +
-          `<table>`;
-
-        return mouseOverHtml;
+          `</table>`;
+   
+        return sanitizeHtml(mouseOverHtml);
       }
 
       return '';
@@ -642,11 +628,10 @@ varying vec4 vColor;
           this.tilesetInfo,
         );
 
-        const DEFAULT_MAX_TILE_WIDTH = 2e5;
+        const DEFAULT_MAX_TILE_WIDTH = this.options.maxTileWidth || 2e5;
 
         if (
-          tileWidth >
-          (this.tilesetInfo.max_tile_width || DEFAULT_MAX_TILE_WIDTH)
+          tileWidth > DEFAULT_MAX_TILE_WIDTH
         ) {
           this.errorTextText = 'Zoom in to see details';
           this.drawError();
@@ -720,6 +705,7 @@ varying vec4 vColor;
           this.drawnAtScale,
         );
       }
+
       this.mouseOverGraphics.clear();
       this.animate();
     }
@@ -793,19 +779,22 @@ GnomadTrack.config = {
   availableOptions: [
     'colorScale',
     'showMousePosition',
-    'workerScriptLocation',
     'variantHeight',
+    'maxTileWidth'
     // 'minZoom'
   ],
   defaultOptions: {
     colorScale: [
-      // Variant, Insertion, Deletion
+      // Variant, Insertion, Deletion, Inversion, Duplication
       [0.3, 0.3, 0.3, 0.6],
       [0.6, 0.6, 0.0, 0.7],
-      [1, 0.0, 0.0, 0.6],
+      [1, 0.0, 0.0, 0.55],
+      [0.68, 0.23, 0.87, 0.8],
+      [0.27, 0.64, 0.09, 0.8]
     ],
     showMousePosition: false,
     variantHeight: 12,
+    maxTileWidth: 2e5
   },
   optionsInfo: {
     
@@ -814,10 +803,12 @@ GnomadTrack.config = {
       inlineOptions: {
         default: {
           value: [
-            // Variant, Insertion, Deletion
+            // Variant, Insertion, Deletion, Inversion, Duplication
             [0.3, 0.3, 0.3, 0.6],
             [0.6, 0.6, 0.0, 0.7],
-            [1, 0.0, 0.0, 0.6],
+            [1, 0.0, 0.0, 0.55],
+            [0.68, 0.23, 0.87, 0.8],
+            [0.27, 0.64, 0.09, 0.8]
           ],
           name: 'Default',
         },

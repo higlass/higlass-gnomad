@@ -32,14 +32,23 @@ chr21   5030275 .       A       G       .       AC0;AS_VQSR     AC=0;AN=7910;AF=
 ```
 Note that `AC` (allele count),`AN` (allele number) and `AF` (allele frequency) is required in the INFO column.
 
+The track can also display GnomAD SV (structural variants) data. The entries in the vcf file have to be in the following form
+
+```
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr3	146453963	nssv16051216  T <INS> .	.	AC=1;AF=4.6e-05;AN=21694;END=146453963;SVLEN=281;SVTYPE=INS
+chr3	146480766	nssv15885393	C	<DEL>	.	.	AC=36;AF=0.001659;AN=21694;END=146481132;SVLEN=-367;SVTYPE=DEL
+chr3	146485150	nssv15972036	C	<DUP>	.	.	AC=2;AF=9.2e-05;AN=21694;END=146513435;SVLEN=28286;SVTYPE=DUP
+chr3	146501411	nssv15885394	T	<DEL>	.	.	AC=38;AF=0.001779;AN=21358;END=146502039;SVLEN=-629;SVTYPE=DEL
+```
+
+
 ## Usage
 
-The live scripts can be found at:
+The live script can be found at:
 
 - https://unpkg.com/higlass-gnomad/dist/higlass-gnomad.min.js
-- https://unpkg.com/higlass-gnomad/dist/0.higlass-gnomad.min.worker.js
 
-Note that `higlass-gnomad` currently requires a worker thread. It'll automatically try to retrieve it from the same path as the main script but it needs to be hosted on the same server. The current recommended solution is to pull the already built js files from a release and have your web server serve them from the same path. If you need the worker script to be in a different location than the main script (on the same server), you can use the option `workerScriptLocation` to specify that location.
 
 ### Client
 
@@ -62,13 +71,16 @@ The following options are available:
   "type": "gnomad",
   "options": {
     "colorScale": [
-      [0.3, 0.3, 0.3, 0.6],// Variant color in RGBA format
-      [0.6, 0.6, 0.0, 0.7],// Insertion color in RGBA format
-      [1, 0.0, 0.0, 0.6],// Deletion color in RGBA format
+      // Variant, Insertion, Deletion, Inversion, Duplication
+      [0.3, 0.3, 0.3, 0.6],
+      [0.6, 0.6, 0.0, 0.7],
+      [1, 0.0, 0.0, 0.55],
+      [0.68, 0.23, 0.87, 0.8],
+      [0.27, 0.64, 0.09, 0.8]
     ],
     "showMousePosition": false,
-    "workerScriptLocation": null, // see 'Usage'
     "variantHeight": 12, // Height of the rectangles
+    "maxTileWidth": 2e5 // Determines how far the user can zoom out before data loading stops
   },
   "data": {
     "type": "vcf",

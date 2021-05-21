@@ -120,10 +120,18 @@ function ChromosomeInfo(filepath, success) {
 /// End Chrominfo
 /////////////////////////////////////////////////////
 
+const extractColumnFromVcfInfo = (info, index) => {
+  const col = {};
+  Object.keys(info).forEach((key) => {
+    col[key] = info[key][index];
+  })
+  return col;
+}
+
 const vcfRecordToJson = (vcfRecord, chrName, chrOffset) => {
   const segments = [];
   const info = vcfRecord['INFO'];
-
+ 
   // VCF records can have multiple ALT. We create a segment for each of them
   vcfRecord['ALT'].forEach((alt, index) => {
     const segment = {
@@ -131,20 +139,42 @@ const vcfRecordToJson = (vcfRecord, chrName, chrOffset) => {
       alt: alt,
       ref: vcfRecord.REF,
       from: vcfRecord.POS + chrOffset,
-      to: vcfRecord.POS + chrOffset + vcfRecord.REF.length,
+      to: chrOffset,
       chrName,
       chrOffset,
       alleleCount: info.AC[index],
       alleleFrequency: info.AF[index],
       alleleNumber: info.AN[index],
+      info: extractColumnFromVcfInfo(info, index),
       row: null,
       type: 'variant',
+      category: 'SNV'
     };
 
-    if (segment['alt'].length > segment['ref'].length) {
-      segment['type'] = 'insertion';
-    } else if (segment['alt'].length < segment['ref'].length) {
-      segment['type'] = 'deletion';
+    // CNVs
+    if(alt.includes(">")){
+      //console.log(vcfRecord);
+      segment['to'] += info.END[index];
+      segment['category'] = 'CNV';
+      if(info.SVTYPE[index] === "INS"){
+        segment['type'] = 'insertion';
+      }else if(info.SVTYPE[index] === "DEL"){
+        segment['type'] = 'deletion';
+      }else if(info.SVTYPE[index] === "DUP"){
+        segment['type'] = 'duplication';
+      }else if(info.SVTYPE[index] === "INV"){
+        segment['type'] = 'inversion';
+      }
+      //console.log(segment);
+    }
+    // SNVs
+    else{
+      segment['to'] += vcfRecord.POS + vcfRecord.REF.length;
+      if (segment['alt'].length > segment['ref'].length) {
+        segment['type'] = 'insertion';
+      } else if (segment['alt'].length < segment['ref'].length) {
+        segment['type'] = 'deletion';
+      }
     }
 
     segments.push(segment);
@@ -169,7 +199,7 @@ const tilesetInfos = {};
 // indexed by uuid
 const dataConfs = {};
 
-const init = (uid, vcfUrl, tbiUrl, chromSizesUrl) => {
+const init = (uid, vcfUrl, tbiUrl, chromSizesUrl, maxTileWidth) => {
   if (!vcfFiles[vcfUrl]) {
     vcfFiles[vcfUrl] = new TabixIndexedFile({
       filehandle: new RemoteFile(vcfUrl),
@@ -195,6 +225,7 @@ const init = (uid, vcfUrl, tbiUrl, chromSizesUrl) => {
   dataConfs[uid] = {
     vcfUrl,
     chromSizesUrl,
+    maxTileWidth
   };
 };
 
@@ -228,16 +259,15 @@ const tilesetInfo = (uid) => {
 };
 
 const tile = async (uid, z, x) => {
-  const MAX_TILE_WIDTH = 200000;
-  const { vcfUrl, chromSizesUrl } = dataConfs[uid];
+
+  const { vcfUrl, chromSizesUrl, maxTileWidth } = dataConfs[uid];
   const vcfFile = vcfFiles[vcfUrl];
 
   return tilesetInfo(uid).then((tsInfo) => {
     const tileWidth = +tsInfo.max_width / 2 ** +z;
     const recordPromises = [];
 
-    if (tileWidth > MAX_TILE_WIDTH) {
-      // this.errorTextText('Zoomed out too far for this track. Zoomin further to see reads');
+    if (tileWidth > maxTileWidth) {
       return new Promise((resolve) => resolve([]));
     }
 
@@ -372,6 +402,8 @@ const renderSegments = (
 
   for (const tileId of tileIds) {
     const tileValue = tileValues.get(`${uid}.${tileId}`);
+
+    if(!tileValue) continue
 
     if (tileValue.error) {
       throw new Error(tileValue.error);
@@ -515,6 +547,10 @@ const renderSegments = (
       colorToUse = PILEUP_COLOR_IXS.DELETION;
     } else if (segment.type === 'insertion') {
       colorToUse = PILEUP_COLOR_IXS.INSERTION;
+    } else if (segment.type === 'duplication') {
+      colorToUse = PILEUP_COLOR_IXS.DUPLICATION;
+    } else if (segment.type === 'inversion') {
+      colorToUse = PILEUP_COLOR_IXS.INVERSION;
     }
     segment['yTop'] = yTop;
     addRect(
