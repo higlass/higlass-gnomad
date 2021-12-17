@@ -559,14 +559,14 @@ varying vec4 vColor;
           positionHtml += `<td>${variant.chrName}:${
             variant.from - variant.chrOffset
           }</td>`;
-          sourceHtml += `<td>Gnomad</td>`;
+          sourceHtml += `<td>gnomAD</td>`;
         } 
         else {
           variantHtml += `<td>Structural variant</td>`;
           positionHtml += `<td>${variant.chrName}:${
             variant.from - variant.chrOffset
           }-${variant.chrName}:${variant.to - variant.chrOffset}</td>`;
-          sourceHtml += `<td>Gnomad SV</td>`;
+          sourceHtml += `<td>gnomAD-SV</td>`;
           svLength += `<td>${variant.info['SVLEN']}</td>`
         }
 

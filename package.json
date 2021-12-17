@@ -1,6 +1,6 @@
 {
   "name": "higlass-gnomad",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "HiGlass GnomAD Track",
   "keywords": [
     "HiGlass",
@@ -69,7 +69,7 @@
     "prerelease": "rm -rf dist/*; npm run build; zip -r dist.zip dist"
   },
   "dependencies": {
-    "@gmod/tabix": "^1.4.6",
+    "@gmod/tabix": "^1.5.0",
     "@gmod/vcf": "^4.0.1",
     "d3-array": "^2.3.1",
     "d3-dsv": "^1.1.1",
