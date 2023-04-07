@@ -1,3 +1,7 @@
+v0.2.3
+
+- Update dependencies
+
 v0.2.0
 
 - Remove necessity to load the worker script separately
