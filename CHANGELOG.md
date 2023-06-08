@@ -1,3 +1,7 @@
+v0.2.4
+
+- Fix broken release
+
 v0.2.3
 
 - Update dependencies
